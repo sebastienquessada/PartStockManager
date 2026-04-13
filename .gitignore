@@ -1,0 +1,33 @@
+## [Bb]in and [Oo]bj directories
+[Bb]in/
+[Oo]bj/
+
+## Visual Studio cache and settings
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+
+## .NET Core / .NET 10
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## Logs (Serilog and others)
+*.log
+logs/
+Log/
+_logs/
+
+## User Secrets (alternative storage)
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+
+## Testing artifacts
+TestResults/
+
+## OS generated files
+.DS_Store
+Thumbs.db
