@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="PartStockManager.Adapter/PartStockManager.Adapter.csproj" />
+  <Project Path="PartStockManager.API/PartStockManager.API.csproj" />
+  <Project Path="PartStockManager.CoreLogic/PartStockManager.CoreLogic.csproj" />
+  <Project Path="PartStockManager.IntegrationTests/PartStockManager.IntegrationTests.csproj" Id="8f6adbb1-e42c-4269-825f-c239d57b71bc" />
+  <Project Path="PartStockManager.UnitTests/PartStockManager.UnitTests.csproj" Id="1b7bc95c-07b3-4475-864c-ac1baa3c63da" />
+</Solution>
