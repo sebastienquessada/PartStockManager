@@ -1,6 +1,6 @@
 # Changelog: PartStockManager
 
-All notable changes to this project will be documented in this file using the version format: `[Major].[Year].[Month].[Day].[Revision]`.
+All notable changes to this project will be documented in this file using the version format: `[Major].[Year].[Month].[Day]`.
 
 ---
 
@@ -17,6 +17,6 @@ All notable changes to this project will be documented in this file using the ve
 ---
 
 ## [Planned Evolutions]
-- [ ] **Security**: Implementation of JWT (JSON Web Token) authentication.
+- [ ] **Security**: Implementation of a  authentication system.
 - [ ] **User Management**: Creation of User entities and Role-Based Access Control (RBAC).
 - [ ] **Frontend**: Development of a dedicated lightweight frontend (e.g., Angular or React) to communicate with the API.
