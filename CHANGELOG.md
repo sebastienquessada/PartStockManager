@@ -1,6 +1,6 @@
 # Changelog: PartStockManager
 
-All notable changes to this project will be documented in this file using the version format: `[Major].[Year].[Month].[Day].[Revision]`.
+All notable changes to this project will be documented in this file using the version format: `[Major].[Year].[Month].[Day]`.
 
 ---
 
