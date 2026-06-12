@@ -1,7 +1,7 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
 
-namespace PartStockManager.Adapter.Models
+namespace PartStockManager.API.DTOs
 {
     public class PartDeletionRequest
     {

@@ -1,15 +1,13 @@
-using Azure.Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
-using PartStockManager.Adapter.Models;
-using PartStockManager.Adapter.Repositories;
+using PartStockManager.API.DTOs;
 using PartStockManager.CoreLogic.Models;
 using PartStockManager.CoreLogic.Repositories;
 using Serilog.Core;
 
 namespace PartStockManager.API.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class PartController : ControllerBase
@@ -23,6 +21,7 @@ namespace PartStockManager.API.Controllers
             _logger = logger;
         }
 
+        [Authorize(Roles = "Administrator,Manager")]
         [HttpPost]
         [Route("create")]
         public IActionResult CreatePart([FromBody] PartDto request)
@@ -55,6 +54,7 @@ namespace PartStockManager.API.Controllers
             }
         }
 
+        [Authorize(Roles = "Administrator,Manager")]
         [HttpPut]
         [Route("modify")]
         public IActionResult ModifyPart([FromBody] PartModificationRequest request)
@@ -85,6 +85,7 @@ namespace PartStockManager.API.Controllers
             }
         }
 
+        [Authorize(Roles = "Administrator,Manager")]
         [HttpDelete]
         [Route("delete")]
         public IActionResult DeletePart([FromBody] PartDeletionRequest request)
@@ -103,6 +104,7 @@ namespace PartStockManager.API.Controllers
             }
         }
 
+        [Authorize(Roles = "Administrator,Manager,Stocktaker")]
         [HttpGet]
         [Route("get/parts")]
         public IActionResult GetParts([FromQuery] string name = "", [FromQuery] string reference = "")
@@ -122,6 +124,7 @@ namespace PartStockManager.API.Controllers
             }
         }
 
+        [Authorize(Roles = "Administrator,Manager,Stocktaker")]
         [HttpGet]
         [Route("get/reached-threshold")]
         public IActionResult GetPartsWithReachedThreshold()

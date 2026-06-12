@@ -1,8 +1,14 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using PartStockManager.Adapter.Database.Context;
 using PartStockManager.Adapter.Repositories;
+using PartStockManager.API.Services;
+using PartStockManager.CoreLogic.Models;
 using PartStockManager.CoreLogic.Repositories;
+using PartStockManager.CoreLogic.Services;
 using Serilog;
+using System.Text;
 
 // Why a try/catch ?  If the API crashes when starting (bad config, port already used or inaccessible), we can have a trace of what is wrong
 try
@@ -31,6 +37,24 @@ try
     // Verify the injection configuration
     builder.Services.AddDbContext<StockDbContext>(options => options.UseSqlServer(connectionString));
 
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        };
+    });
+
+    builder.Services.AddScoped<IAuthService, AuthService>();
+    builder.Services.AddScoped<IUserRepository, UserRepository>();
     builder.Services.AddScoped<IStockRepository, StockRepository>();
     builder.Services.AddScoped<IPartRepository, PartRepository>();
 
@@ -49,12 +73,31 @@ try
 
     app.UseHttpsRedirection();
 
+    app.UseAuthentication();
     app.UseAuthorization();
 
     // Optional: Allows to log automatically each incoming HTTP request (useful to debug the API)
     app.UseSerilogRequestLogging();
 
     app.MapControllers();
+
+
+    if (!app.Environment.IsEnvironment("Testing"))
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+            if (userRepository.GetByUsername(builder.Configuration["Seed:AdminUsername"]!) == null)
+            {
+                var adminUser = new User(
+                    builder.Configuration["Seed:AdminUsername"]!,
+                    BCrypt.Net.BCrypt.HashPassword(builder.Configuration["Seed:AdminPassword"]!),
+                    UserProfile.Administrator
+                );
+                userRepository.CreateUser(adminUser);
+            }
+        }
+    }
 
     app.Run();
 }

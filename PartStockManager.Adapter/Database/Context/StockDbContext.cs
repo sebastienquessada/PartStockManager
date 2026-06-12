@@ -8,6 +8,7 @@ namespace PartStockManager.Adapter.Database.Context
         public StockDbContext(DbContextOptions<StockDbContext> options) : base(options) { }
 
         public DbSet<PartEntity> Parts => Set<PartEntity>();
+        public DbSet<UserEntity> Users => Set<UserEntity>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

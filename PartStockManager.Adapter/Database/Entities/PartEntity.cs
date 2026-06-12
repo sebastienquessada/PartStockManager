@@ -8,9 +8,11 @@ namespace PartStockManager.Adapter.Database.Entities
         public int Id { get; set; }
 
         [Required]
+        [MaxLength(100)]
         public string Reference { get; set; }
 
         [Required]
+        [MaxLength(200)]
         public string Name { get; set; }
 
         [Range(0, int.MaxValue, ErrorMessage = "The stock quantity can't be negative !")]

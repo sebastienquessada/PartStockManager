@@ -1,4 +1,4 @@
-﻿namespace PartStockManager.Adapter.Models
+﻿namespace PartStockManager.API.DTOs
 {
     public class InventoryRequest
     {

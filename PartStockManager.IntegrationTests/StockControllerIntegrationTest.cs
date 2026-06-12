@@ -1,8 +1,12 @@
-﻿using PartStockManager.Adapter.Database.Entities;
-using PartStockManager.Adapter.Models;
+﻿using Microsoft.VisualStudio.TestPlatform.Utilities;
+using PartStockManager.Adapter.Database.Entities;
+using PartStockManager.API.DTOs;
+using PartStockManager.CoreLogic.Models;
 using PartStockManager.IntegrationTests.Models;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Xunit.Abstractions;
 
 namespace PartStockManager.IntegrationTests
 {
@@ -14,15 +18,127 @@ namespace PartStockManager.IntegrationTests
         public StockControllerIntegrationTest(CustomWebApplicationFactory<Program> factory)
         {
             _factory = factory;
-
             _factory.ResetDatabase();
 
             _client = factory.CreateClient();
         }
 
         [Fact]
-        public async Task Inventory_Success()
+        public async Task Inventory_Success_Admin_Role()
         {
+            var token = _factory.GenerateTestToken(UserProfile.Administrator);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var expected = HttpStatusCode.OK;
+
+            _factory.SeedData(db =>
+            {
+                var entity = new PartEntity
+                {
+                    Reference = "PART001",
+                    Name = "My First Part",
+                    StockQuantity = 10,
+                    LowStockThreshold = 2
+                };
+
+                db.Parts.Add(entity);
+
+                entity = new PartEntity
+                {
+                    Reference = "PART002",
+                    Name = "My Second Part",
+                    StockQuantity = 10,
+                    LowStockThreshold = 2
+                };
+
+                db.Parts.Add(entity);
+
+                entity = new PartEntity
+                {
+                    Reference = "PART003",
+                    Name = "My Third Part",
+                    StockQuantity = 10,
+                    LowStockThreshold = 2
+                };
+
+                db.Parts.Add(entity);
+            });
+
+            var inventoryItems = new List<InventoryItem>()
+            {
+                new InventoryItem("PART001", 10),
+                new InventoryItem("PART002", 5),
+                new InventoryItem("PART003", 8)
+            };
+
+            var request = new InventoryRequest(inventoryItems);
+
+            var response = await _client.PostAsJsonAsync("/api/Stock/inventory", request);
+
+            Assert.Equal(expected, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Inventory_Success_Manager_Role()
+        {
+            var token = _factory.GenerateTestToken(UserProfile.Manager);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var expected = HttpStatusCode.OK;
+
+            _factory.SeedData(db =>
+            {
+                var entity = new PartEntity
+                {
+                    Reference = "PART001",
+                    Name = "My First Part",
+                    StockQuantity = 10,
+                    LowStockThreshold = 2
+                };
+
+                db.Parts.Add(entity);
+
+                entity = new PartEntity
+                {
+                    Reference = "PART002",
+                    Name = "My Second Part",
+                    StockQuantity = 10,
+                    LowStockThreshold = 2
+                };
+
+                db.Parts.Add(entity);
+
+                entity = new PartEntity
+                {
+                    Reference = "PART003",
+                    Name = "My Third Part",
+                    StockQuantity = 10,
+                    LowStockThreshold = 2
+                };
+
+                db.Parts.Add(entity);
+            });
+
+            var inventoryItems = new List<InventoryItem>()
+            {
+                new InventoryItem("PART001", 10),
+                new InventoryItem("PART002", 5),
+                new InventoryItem("PART003", 8)
+            };
+
+            var request = new InventoryRequest(inventoryItems);
+
+            var response = await _client.PostAsJsonAsync("/api/Stock/inventory", request);
+
+            Assert.Equal(expected, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Inventory_Success_Stocktaker_Role()
+        {
+            var token = _factory.GenerateTestToken(UserProfile.Stocktaker);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
             var expected = HttpStatusCode.OK;
 
             _factory.SeedData(db =>
@@ -75,6 +191,9 @@ namespace PartStockManager.IntegrationTests
         [Fact]
         public async Task Inventory_Failed_Reference_Not_Found()
         {
+            var token = _factory.GenerateTestToken(UserProfile.Administrator);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
             var expected = HttpStatusCode.NotFound;
 
             _factory.SeedData(db =>
@@ -127,6 +246,9 @@ namespace PartStockManager.IntegrationTests
         [Fact]
         public async Task Inventory_Failed_Negative_Quantity()
         {
+            var token = _factory.GenerateTestToken(UserProfile.Administrator);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
             var expected = HttpStatusCode.BadRequest;
 
             _factory.SeedData(db =>
@@ -177,9 +299,114 @@ namespace PartStockManager.IntegrationTests
         }
 
         [Fact]
-        public async Task Stock_Exit_Record_Success()
+        public async Task Stock_Exit_Record_Success_Admin_Role()
         {
+            var token = _factory.GenerateTestToken(UserProfile.Administrator);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
             var expected = HttpStatusCode.OK;
+
+            _factory.SeedData(db =>
+            {
+                var entity = new PartEntity
+                {
+                    Reference = "PART001",
+                    Name = "My First Part",
+                    StockQuantity = 10,
+                    LowStockThreshold = 2
+                };
+
+                db.Parts.Add(entity);
+
+                entity = new PartEntity
+                {
+                    Reference = "PART002",
+                    Name = "My Second Part",
+                    StockQuantity = 10,
+                    LowStockThreshold = 2
+                };
+
+                db.Parts.Add(entity);
+
+                entity = new PartEntity
+                {
+                    Reference = "PART003",
+                    Name = "My Third Part",
+                    StockQuantity = 10,
+                    LowStockThreshold = 2
+                };
+
+                db.Parts.Add(entity);
+            });
+
+            var request = new StockMovementRequest();
+
+            request.Reference = "PART002";
+            request.Quantity = 1;
+
+            var response = await _client.PostAsJsonAsync("/api/Stock/exit", request);
+
+            Assert.Equal(expected, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Stock_Exit_Record_Success_Manager_Role()
+        {
+            var token = _factory.GenerateTestToken(UserProfile.Manager);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var expected = HttpStatusCode.OK;
+
+            _factory.SeedData(db =>
+            {
+                var entity = new PartEntity
+                {
+                    Reference = "PART001",
+                    Name = "My First Part",
+                    StockQuantity = 10,
+                    LowStockThreshold = 2
+                };
+
+                db.Parts.Add(entity);
+
+                entity = new PartEntity
+                {
+                    Reference = "PART002",
+                    Name = "My Second Part",
+                    StockQuantity = 10,
+                    LowStockThreshold = 2
+                };
+
+                db.Parts.Add(entity);
+
+                entity = new PartEntity
+                {
+                    Reference = "PART003",
+                    Name = "My Third Part",
+                    StockQuantity = 10,
+                    LowStockThreshold = 2
+                };
+
+                db.Parts.Add(entity);
+            });
+
+            var request = new StockMovementRequest();
+
+            request.Reference = "PART002";
+            request.Quantity = 1;
+
+            var response = await _client.PostAsJsonAsync("/api/Stock/exit", request);
+
+            Assert.Equal(expected, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Stock_Exit_Record_Fail_Wrong_User_Right()
+        {
+            var token = _factory.GenerateTestToken(UserProfile.Stocktaker);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var expected = HttpStatusCode.Forbidden;
 
             _factory.SeedData(db =>
             {
@@ -227,6 +454,9 @@ namespace PartStockManager.IntegrationTests
         [Fact]
         public async Task Stock_Exit_Record_Failed_Reference_Not_Found()
         {
+            var token = _factory.GenerateTestToken(UserProfile.Administrator);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
             var expected = HttpStatusCode.NotFound;
 
             _factory.SeedData(db =>
@@ -275,6 +505,9 @@ namespace PartStockManager.IntegrationTests
         [Fact]
         public async Task Stock_Exit_Record_Failed_Empty_Reference()
         {
+            var token = _factory.GenerateTestToken(UserProfile.Administrator);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
             var expected = HttpStatusCode.BadRequest;
 
             _factory.SeedData(db =>
@@ -323,6 +556,9 @@ namespace PartStockManager.IntegrationTests
         [Fact]
         public async Task Stock_Exit_Record_Failed_Negative_Quantity()
         {
+            var token = _factory.GenerateTestToken(UserProfile.Administrator);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
             var expected = HttpStatusCode.BadRequest;
 
             _factory.SeedData(db =>
@@ -371,6 +607,9 @@ namespace PartStockManager.IntegrationTests
         [Fact]
         public async Task Stock_Exit_Record_Failed_Available_Quantity_Too_Low()
         {
+            var token = _factory.GenerateTestToken(UserProfile.Administrator);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
             var expected = HttpStatusCode.BadRequest;
 
             _factory.SeedData(db =>
@@ -417,9 +656,114 @@ namespace PartStockManager.IntegrationTests
         }
 
         [Fact]
-        public async Task Stock_Entry_Record_Success()
+        public async Task Stock_Entry_Record_Success_Admin_Role()
         {
+            var token = _factory.GenerateTestToken(UserProfile.Administrator);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
             var expected = HttpStatusCode.OK;
+
+            _factory.SeedData(db =>
+            {
+                var entity = new PartEntity
+                {
+                    Reference = "PART001",
+                    Name = "My First Part",
+                    StockQuantity = 10,
+                    LowStockThreshold = 2
+                };
+
+                db.Parts.Add(entity);
+
+                entity = new PartEntity
+                {
+                    Reference = "PART002",
+                    Name = "My Second Part",
+                    StockQuantity = 10,
+                    LowStockThreshold = 2
+                };
+
+                db.Parts.Add(entity);
+
+                entity = new PartEntity
+                {
+                    Reference = "PART003",
+                    Name = "My Third Part",
+                    StockQuantity = 10,
+                    LowStockThreshold = 2
+                };
+
+                db.Parts.Add(entity);
+            });
+
+            var request = new StockMovementRequest();
+
+            request.Reference = "PART002";
+            request.Quantity = 5;
+
+            var response = await _client.PostAsJsonAsync("/api/Stock/entry", request);
+
+            Assert.Equal(expected, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Stock_Entry_Record_Success_Manager_Role()
+        {
+            var token = _factory.GenerateTestToken(UserProfile.Manager);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var expected = HttpStatusCode.OK;
+
+            _factory.SeedData(db =>
+            {
+                var entity = new PartEntity
+                {
+                    Reference = "PART001",
+                    Name = "My First Part",
+                    StockQuantity = 10,
+                    LowStockThreshold = 2
+                };
+
+                db.Parts.Add(entity);
+
+                entity = new PartEntity
+                {
+                    Reference = "PART002",
+                    Name = "My Second Part",
+                    StockQuantity = 10,
+                    LowStockThreshold = 2
+                };
+
+                db.Parts.Add(entity);
+
+                entity = new PartEntity
+                {
+                    Reference = "PART003",
+                    Name = "My Third Part",
+                    StockQuantity = 10,
+                    LowStockThreshold = 2
+                };
+
+                db.Parts.Add(entity);
+            });
+
+            var request = new StockMovementRequest();
+
+            request.Reference = "PART002";
+            request.Quantity = 5;
+
+            var response = await _client.PostAsJsonAsync("/api/Stock/entry", request);
+
+            Assert.Equal(expected, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Stock_Entry_Record_Fail_Wrong_Right()
+        {
+            var token = _factory.GenerateTestToken(UserProfile.Stocktaker);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var expected = HttpStatusCode.Forbidden;
 
             _factory.SeedData(db =>
             {
@@ -467,6 +811,9 @@ namespace PartStockManager.IntegrationTests
         [Fact]
         public async Task Stock_Entry_Record_Failed_Reference_Not_Found()
         {
+            var token = _factory.GenerateTestToken(UserProfile.Administrator);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
             var expected = HttpStatusCode.NotFound;
 
             _factory.SeedData(db =>
@@ -515,6 +862,9 @@ namespace PartStockManager.IntegrationTests
         [Fact]
         public async Task Stock_Entry_Record_Failed_Empty_Reference()
         {
+            var token = _factory.GenerateTestToken(UserProfile.Administrator);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
             var expected = HttpStatusCode.BadRequest;
 
             _factory.SeedData(db =>
@@ -563,6 +913,9 @@ namespace PartStockManager.IntegrationTests
         [Fact]
         public async Task Stock_Entry_Record_Failed_Negative_Quantity()
         {
+            var token = _factory.GenerateTestToken(UserProfile.Administrator);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
             var expected = HttpStatusCode.BadRequest;
 
             _factory.SeedData(db =>

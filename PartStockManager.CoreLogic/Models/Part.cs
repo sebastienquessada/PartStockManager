@@ -34,10 +34,16 @@ namespace PartStockManager.CoreLogic.Models
         public void UpdateInfo(string name, string reference, int lowStockThreshold)
         {
             if (string.IsNullOrEmpty(name.Trim()))
-                throw new ArgumentException("Name can't be empty !");
+                throw new ArgumentException(nameof(name), "Name can't be empty !");
+
+            if (name.Length > 200)
+                throw new ArgumentOutOfRangeException(nameof(name), "Name cannot exceed 200 characters.");
 
             if (string.IsNullOrEmpty(reference.Trim()))
-                throw new ArgumentException("Reference can't be empty !");
+                throw new ArgumentException(nameof(reference), "Reference can't be empty !");
+
+            if (reference.Length > 100)
+                throw new ArgumentOutOfRangeException(nameof(reference), "Reference cannot exceed 100 characters.");
 
             if (lowStockThreshold < 0)
                 throw new ArgumentOutOfRangeException(nameof(lowStockThreshold), "Low stock threshold can't be lower than zero !");

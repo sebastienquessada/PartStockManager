@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PartStockManager.Adapter.Models;
+using PartStockManager.API.DTOs;
 using PartStockManager.CoreLogic.Repositories;
 
 namespace PartStockManager.API.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class StockController : ControllerBase
@@ -15,6 +17,7 @@ namespace PartStockManager.API.Controllers
             _stockRepository = stockRepository;
         }
 
+        [Authorize(Roles = "Administrator,Manager,Stocktaker")]
         [HttpPost]
         [Route("inventory")]
         public IActionResult Inventory([FromBody] InventoryRequest request)
@@ -33,6 +36,7 @@ namespace PartStockManager.API.Controllers
             return result ? Ok("Inventory registered !") : NotFound("One or more references were not found in the database.");
         }
 
+        [Authorize(Roles = "Administrator,Manager")]
         [HttpPost]
         [Route("exit")]
         public IActionResult RecordStockExit([FromBody] StockMovementRequest request)
@@ -48,6 +52,7 @@ namespace PartStockManager.API.Controllers
             }
         }
 
+        [Authorize(Roles = "Administrator,Manager")]
         [HttpPost]
         [Route("entry")]
         public IActionResult RecordStockEntry([FromBody] StockMovementRequest request)

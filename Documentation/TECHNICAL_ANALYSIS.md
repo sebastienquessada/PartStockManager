@@ -15,6 +15,8 @@ This document details the technological choices, software architecture, and tech
     * *Justification*: The `CustomWebApplicationFactory` replaces the SQL Server context with an isolated In-Memory database for each test session, guaranteeing a consistently clean environment without any dependency on an external database server.
 * **Logging**: Serilog
 * **Testing**: xUnit, FluentAssertions, Microsoft.AspNetCore.Mvc.Testing
+* **Authentication**: JWT (JSON Web Token) Bearer authentication via `Microsoft.AspNetCore.Authentication.JwtBearer`
+* **Password Hashing**: BCrypt (`BCrypt.Net-Next`)
 
 ---
 
@@ -48,6 +50,13 @@ dotnet add package Serilog.Sinks.File
 dotnet add package Serilog.Sinks.Console
 ```
 
+Authentication & Security (API Project):
+
+```powershell
+dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer
+dotnet add package BCrypt.Net-Next
+```
+
 ## 3. Entity Framework Core: Code-First Approach
 The application utilizes the Code-First approach, where C# classes define the database schema.
 
@@ -77,6 +86,20 @@ Middleware: Serilog is configured with Log.CloseAndFlush() within a finally bloc
 ### 5.2. Adapter Layer (Infrastructure)
 Repositories: Encapsulate LINQ queries. Searches are optimized for native SQL translation by EF Core.
 
+### 5.3. Authentication & Authorization
+Authentication is handled via **JWT Bearer tokens**:
+- Users authenticate via `POST /api/Auth/login` with their username and password.
+- Passwords are hashed using **BCrypt** before being stored in the database.
+- On successful login, a signed JWT is issued containing the username (`ClaimTypes.Name`) and the user's profile (`ClaimTypes.Role`).
+- JWT settings (`Key`, `Issuer`, `Audience`) are configured under the `Jwt` section in `appsettings.json`.
+
+Authorization is enforced at the controller/action level:
+- `[Authorize(Roles = "...")]` restricts access to specific profiles per the permissions matrix defined in the Functional Analysis.
+- `[Authorize]` (without roles) is used for endpoints accessible to any authenticated user, such as `change-password`.
+
+### 5.4. Default Administrator Seed
+On startup (outside the `Testing` environment), the application checks for the existence of a default administrator account, configured under the `Seed` section in `appsettings.json` (`Seed:AdminUsername`, `Seed:AdminPassword`). If it doesn't exist, it is created automatically with the `Administrator` profile. This account is protected from modification and deletion via the API.
+
 ## 6. Quality Strategy (Testing)
 
 ### 6.1. Unit Tests
@@ -89,3 +112,9 @@ The `CustomWebApplicationFactory` removes all EF Core SQL Server services regist
 - No dependency on a running SQL Server instance.
 - Full isolation between test runs via `ResetDatabase()`.
 - End-to-end validation from the Controller down to the Persistence layer.
+
+### 6.3. Authorization Testing
+The `CustomWebApplicationFactory` exposes a `GenerateTestToken(UserProfile profile, string username)` helper method that generates signed JWT tokens using a fake test signing key, issuer, and audience (injected via `UseSetting` to override `appsettings.json`). This allows integration tests to verify, for each controller action:
+- Requests without a token return `401 Unauthorized`.
+- Requests with an insufficient role return `403 Forbidden`.
+- Requests with the correct role return the expected success/error status code.
